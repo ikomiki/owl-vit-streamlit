@@ -29,6 +29,12 @@ def main():
     
     device = get_device()
     st.sidebar.write(f"使用デバイス: {device.upper()}")
+    
+    # サイドバーの設定
+    st.sidebar.header("設定")
+    threshold = st.sidebar.slider("検出閾値 (Threshold)", 0.0, 1.0, 0.1, 0.01)
+    line_width = st.sidebar.slider("線の太さ (Line Width)", 1, 20, 3)
+    font_size = st.sidebar.slider("文字サイズ (Font Size)", 8, 128, 16)
 
     uploaded_file = st.file_uploader("画像を選択してください...", type=["png", "jpg", "jpeg"])
     prompt = st.text_input("プロンプトを入力してください (例: 'a dog, a cat, a photo of a male')")
@@ -53,12 +59,6 @@ def main():
 
     colors = ["red", "green", "blue", "orange", "purple", "cyan", "magenta", "yellow"]
     prompt_colors = {p: colors[i % len(colors)] for i, p in enumerate(prompts)}
-
-    # サイドバーの設定
-    st.sidebar.header("設定")
-    threshold = st.sidebar.slider("検出閾値 (Threshold)", 0.0, 1.0, 0.1, 0.01)
-    line_width = st.sidebar.slider("線の太さ (Line Width)", 1, 20, 3)
-    font_size = st.sidebar.slider("文字サイズ (Font Size)", 8, 128, 16)
 
     if run:
         processor, model = load_model()
