@@ -41,6 +41,12 @@ def main():
     colors = ["red", "green", "blue", "orange", "purple", "cyan", "magenta", "yellow"]
     prompt_colors = {p: colors[i % len(colors)] for i, p in enumerate(prompts)}
 
+    # Sidebar configuration
+    st.sidebar.header("設定")
+    threshold = st.sidebar.slider("検出閾値 (Threshold)", 0.0, 1.0, 0.1, 0.01)
+    line_width = st.sidebar.slider("線の太さ (Line Width)", 1, 20, 3)
+    font_size = st.sidebar.slider("文字サイズ (Font Size)", 8, 128, 16)
+
     if run:
         processor, model = load_model()
         inputs = processor(text=[prompts], images=image, return_tensors="pt")
@@ -50,7 +56,7 @@ def main():
             outputs = model(**inputs)
         # Post-process to get bounding boxes
         results = processor.post_process_object_detection(
-            outputs, threshold=0.1, target_sizes=[image.size[::-1]]
+            outputs, threshold=threshold, target_sizes=[image.size[::-1]]
         )
         
         if results and len(results[0]) > 0:
@@ -65,7 +71,7 @@ def main():
             boxes_tensor = results[0]["boxes"].cpu()
 
             for score, label_idx, box in zip(scores, labels_indices, boxes_tensor):
-                if score > 0.1:
+                if score > threshold:
                     box_list = box.tolist()
                     boxes.append(box_list)
                     
@@ -92,7 +98,7 @@ def main():
                     )
             
             if boxes:
-                annotated_image = draw_boxes(image.copy(), boxes, labels, box_colors)
+                annotated_image = draw_boxes(image.copy(), boxes, labels, box_colors, line_width, font_size)
                 st.image(annotated_image, caption="検出結果", use_container_width=True)
 
                 st.write("### 検出結果一覧")
