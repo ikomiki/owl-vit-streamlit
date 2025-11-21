@@ -29,9 +29,18 @@ def main():
         st.info("Please enter a prompt.")
         return
 
+    # Parse prompts and assign colors
+    prompts = [p.strip() for p in prompt.split(",") if p.strip()]
+    if not prompts:
+        st.info("Please enter a valid prompt.")
+        return
+
+    colors = ["red", "green", "blue", "orange", "purple", "cyan", "magenta", "yellow"]
+    prompt_colors = {p: colors[i % len(colors)] for i, p in enumerate(prompts)}
+
     if run:
         processor, model = load_model()
-        inputs = processor(text=[prompt], images=image, return_tensors="pt")
+        inputs = processor(text=[prompts], images=image, return_tensors="pt")
         inputs = {k: v.to("mps") if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
         
         with torch.no_grad():
@@ -40,10 +49,11 @@ def main():
         results = processor.post_process_object_detection(
             outputs, threshold=0.1, target_sizes=[image.size[::-1]]
         )
-        print(f"results: {results}")
+        
         if results and len(results[0]) > 0:
             boxes = []
             labels = []
+            box_colors = []
             results_list = []
             
             # Move tensors to CPU for processing
@@ -52,30 +62,41 @@ def main():
             boxes_tensor = results[0]["boxes"].cpu()
 
             for score, label_idx, box in zip(scores, labels_indices, boxes_tensor):
-                if score > 0.3:
+                if score > 0.1:
                     box_list = box.tolist()
                     boxes.append(box_list)
-                    # Use the prompt as the label text since we only have one prompt
-                    labels.append(prompt)
+                    
+                    # Get the corresponding prompt and color
+                    # label_idx corresponds to the index in the prompts list
+                    idx = label_idx.item()
+                    if idx < len(prompts):
+                        label_text = prompts[idx]
+                        color = prompt_colors[label_text]
+                    else:
+                        label_text = "Unknown"
+                        color = "red"
+
+                    labels.append(label_text)
+                    box_colors.append(color)
                     
                     results_list.append(
                         {
-                            "Label": prompt,
+                            "Label": label_text,
                             "Score": f"{score:.2f}",
                             "Box": [round(b, 2) for b in box_list],
                         }
                     )
             
             if boxes:
-                annotated_image = draw_boxes(image.copy(), boxes, labels)
+                annotated_image = draw_boxes(image.copy(), boxes, labels, box_colors)
                 st.image(annotated_image, caption="Annotated Image", use_container_width=True)
 
                 st.write("### Detection Results")
                 st.dataframe(results_list)
             else:
-                st.warning("No objects detected with the given prompt.")
+                st.warning("No objects detected with the given prompts.")
         else:
-            st.warning("No objects detected with the given prompt.")
+            st.warning("No objects detected with the given prompts.")
 
 if __name__ == "__main__":
     main()
