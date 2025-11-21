@@ -61,17 +61,20 @@ def main():
     prompt_colors = {p: colors[i % len(colors)] for i, p in enumerate(prompts)}
 
     if run:
-        processor, model = load_model()
-        inputs = processor(text=[prompts], images=image, return_tensors="pt")
-        # Tensorの場合は適切なデバイスに移動
-        inputs = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
+        with st.spinner('モデルを読み込み中...'):
+            processor, model = load_model()
         
-        with torch.no_grad():
-            outputs = model(**inputs)
-        # バウンディングボックスを取得するための後処理
-        results = processor.post_process_object_detection(
-            outputs, threshold=threshold, target_sizes=[image.size[::-1]]
-        )
+        with st.spinner('推論を実行中...'):
+            inputs = processor(text=[prompts], images=image, return_tensors="pt")
+            # Tensorの場合は適切なデバイスに移動
+            inputs = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
+            
+            with torch.no_grad():
+                outputs = model(**inputs)
+            # バウンディングボックスを取得するための後処理
+            results = processor.post_process_object_detection(
+                outputs, threshold=threshold, target_sizes=[image.size[::-1]]
+            )
         
         if results and len(results[0]) > 0:
             boxes = []
