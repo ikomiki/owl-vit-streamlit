@@ -20,7 +20,7 @@ def main():
 
     if uploaded_file is not None:
         image = Image.open(uploaded_file).convert("RGB")
-        st.image(image, caption="Uploaded Image", use_column_width=True)
+        st.image(image, caption="Uploaded Image", use_container_width=True)
     else:
         st.info("Please upload an image.")
         return
@@ -38,7 +38,7 @@ def main():
             outputs = model(**inputs)
         # Post-process to get bounding boxes
         results = processor.post_process_object_detection(
-            outputs, threshold=0.2, target_sizes=[image.size[::-1]]
+            outputs, threshold=0.1, target_sizes=[image.size[::-1]]
         )
         print(f"results: {results}")
         if results and len(results[0]) > 0:
@@ -52,7 +52,7 @@ def main():
             boxes_tensor = results[0]["boxes"].cpu()
 
             for score, label_idx, box in zip(scores, labels_indices, boxes_tensor):
-                if score > 0.2:
+                if score > 0.3:
                     box_list = box.tolist()
                     boxes.append(box_list)
                     # Use the prompt as the label text since we only have one prompt
@@ -68,7 +68,7 @@ def main():
             
             if boxes:
                 annotated_image = draw_boxes(image.copy(), boxes, labels)
-                st.image(annotated_image, caption="Annotated Image", use_column_width=True)
+                st.image(annotated_image, caption="Annotated Image", use_container_width=True)
 
                 st.write("### Detection Results")
                 st.dataframe(results_list)
