@@ -2,27 +2,27 @@ from typing import List, Tuple
 from PIL import Image, ImageDraw, ImageFont
 
 def draw_boxes(image: Image.Image, boxes: List[Tuple[float, float, float, float]], labels: List[str], colors: List[str] = None, line_width: int = 3, font_size: int = 16) -> Image.Image:
-    """Draw bounding boxes with labels on a PIL image.
+    """PIL画像にラベル付きのバウンディングボックスを描画します。
 
     Args:
-        image: PIL Image to annotate.
-        boxes: List of (x0, y0, x1, y1) in pixel coordinates.
-        labels: Corresponding list of label strings.
-        colors: List of color strings for each box. Defaults to red if not provided.
-        line_width: Width of the bounding box lines.
-        font_size: Size of the label font.
+        image: 注釈を付けるPIL画像。
+        boxes: ピクセル座標の(x0, y0, x1, y1)のリスト。
+        labels: 対応するラベル文字列のリスト。
+        colors: 各ボックスの色文字列のリスト。指定されない場合は赤がデフォルトになります。
+        line_width: バウンディングボックスの線の太さ。
+        font_size: ラベルフォントのサイズ。
     Returns:
-        Annotated PIL Image.
+        注釈付きのPIL画像。
     """
     draw = ImageDraw.Draw(image)
     try:
         font = ImageFont.truetype("arial.ttf", size=font_size)
     except Exception:
-        # Fallback to default font with size support (Pillow 10+)
+        # Pillow 10+ でサイズサポート付きのデフォルトフォントにフォールバック
         try:
             font = ImageFont.load_default(size=font_size)
         except TypeError:
-            # Fallback for older Pillow versions (though we confirmed 12.0.0)
+            # 古いPillowバージョンのためのフォールバック（12.0.0を確認済みだが念のため）
             font = ImageFont.load_default()
     
     if colors is None:
