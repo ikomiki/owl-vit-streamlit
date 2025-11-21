@@ -14,25 +14,28 @@ def load_model():
     return processor, model
 
 def main():
-    uploaded_file = st.file_uploader("Choose an image...", type=["png", "jpg", "jpeg"])
-    prompt = st.text_input("Enter a prompt (e.g., 'dog', 'cat', 'car')")
-    run = st.button("Run Inference")
+    st.title("OwlViT 物体検出アプリ")
+    st.write("画像をアップロードし、テキストプロンプトを入力して物体を検出します。")
+
+    uploaded_file = st.file_uploader("画像を選択してください...", type=["png", "jpg", "jpeg"])
+    prompt = st.text_input("プロンプトを入力してください (例: 'a dog, a cat, a photo of a male')")
+    run = st.button("推論実行")
 
     if uploaded_file is not None:
         image = Image.open(uploaded_file).convert("RGB")
-        st.image(image, caption="Uploaded Image", use_container_width=True)
+        st.image(image, caption="アップロードされた画像", use_container_width=True)
     else:
-        st.info("Please upload an image.")
+        st.info("画像をアップロードしてください。")
         return
 
     if not prompt:
-        st.info("Please enter a prompt.")
+        st.info("プロンプトを入力してください。")
         return
 
     # Parse prompts and assign colors
     prompts = [p.strip() for p in prompt.split(",") if p.strip()]
     if not prompts:
-        st.info("Please enter a valid prompt.")
+        st.info("有効なプロンプトを入力してください。")
         return
 
     colors = ["red", "green", "blue", "orange", "purple", "cyan", "magenta", "yellow"]
@@ -81,22 +84,23 @@ def main():
                     
                     results_list.append(
                         {
-                            "Label": label_text,
-                            "Score": f"{score:.2f}",
-                            "Box": [round(b, 2) for b in box_list],
+                            "ラベル": label_text,
+                            "スコア": f"{score:.2f}",
+                            "バウンディングボックス": [round(b, 2) for b in box_list],
+                            "色": color,
                         }
                     )
             
             if boxes:
                 annotated_image = draw_boxes(image.copy(), boxes, labels, box_colors)
-                st.image(annotated_image, caption="Annotated Image", use_container_width=True)
+                st.image(annotated_image, caption="検出結果", use_container_width=True)
 
-                st.write("### Detection Results")
+                st.write("### 検出結果一覧")
                 st.dataframe(results_list)
             else:
-                st.warning("No objects detected with the given prompts.")
+                st.warning("指定されたプロンプトで物体は検出されませんでした。")
         else:
-            st.warning("No objects detected with the given prompts.")
+            st.warning("指定されたプロンプトで物体は検出されませんでした。")
 
 if __name__ == "__main__":
     main()
